@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>จิบดี</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one friendly column — greeting + glass gauge hero, cup buttons, today's timeline, history, profile */
+:root{
+  --bg:#eef5f7; --surface:#ffffff; --fg:#10262f; --muted:#5a717b; --line:#d6e4e9;
+  --water:#1d9bc4; --water-2:#7fd1ea; --water-soft:#dff2f8; --ink:#0a5d78;
+  --ok:#2c8a57; --warn:#c07a12; --low:#c8432f;
+  --display:"Mitr","IBM Plex Sans Thai",system-ui,sans-serif;
+  --sans:"IBM Plex Sans Thai",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c161b; --surface:#132129; --fg:#e3eef2; --muted:#8fa6b0; --line:#22343d;
+  --water:#3fb8de; --water-2:#1f6f8a; --water-soft:#14313c; --ink:#8fdcf3;
+  --ok:#5cc58b; --warn:#e3aa4b; --low:#f07e6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c161b; --surface:#132129; --fg:#e3eef2; --muted:#8fa6b0; --line:#22343d;
+  --water:#3fb8de; --water-2:#1f6f8a; --water-soft:#14313c; --ink:#8fdcf3;
+  --ok:#5cc58b; --warn:#e3aa4b; --low:#f07e6c; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:600px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;text-wrap:balance}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted);font-size:.88rem}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0;width:100%}
+
+/* brand bar */
+.brand{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:1.3rem;color:var(--ink)}
+.logo small{font-family:var(--sans);font-size:.78rem;color:var(--muted)}
+.datebar{display:flex;gap:4px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.datebar button{border:0;background:none;border-radius:999px;width:32px;height:32px;font-size:1.1rem;color:var(--muted)}
+.datebar button:hover:not(:disabled){background:var(--water-soft);color:var(--ink)}
+.datebar button:disabled{opacity:.3;cursor:default}
+.datebar input{border:0;background:none;padding:4px;width:auto}
+
+/* hero */
+.hero{border-radius:24px;padding:22px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;color:#fff;min-height:220px;
+  background:linear-gradient(100deg,rgba(6,40,54,.88) 0%,rgba(6,40,54,.55) 55%,rgba(6,40,54,.25)),var(--img,none) center/cover,#0d4a60;box-shadow:0 12px 30px -16px rgba(6,40,54,.55)}
+.hero .date,.hero .muted{color:rgba(255,255,255,.78)}
+.hero .big b{color:#fff}
+.hero .status{background:rgba(255,255,255,.94);color:#10262f}
+.hero .status::before{background:var(--dot,#8aa)}
+.hero .s-ok{--dot:#2c8a57}.hero .s-near{--dot:#1d9bc4}.hero .s-under{--dot:#c07a12}.hero .s-low{--dot:#c8432f}
+.hero .glass{filter:drop-shadow(0 6px 14px rgba(0,0,0,.3))}
+.hero h2{font-size:1.35rem}
+.hero .date{color:var(--muted);font-size:.9rem;margin-top:2px}
+.glass{width:110px;height:150px;display:block}
+.stats{display:grid;gap:10px;min-width:0}
+.big{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.big b{font-family:var(--mono);font-size:2.4rem;line-height:1;color:var(--ink);font-weight:500}
+.status{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-size:.84rem;font-weight:600;background:var(--water-soft)}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.s-ok{color:var(--ok)}.s-near{color:var(--ink)}.s-under{color:var(--warn)}.s-low{color:var(--low)}.s-none{color:var(--muted)}
+.wave{animation:wave 4s ease-in-out infinite alternate}
+@keyframes wave{from{transform:translateX(0)}to{transform:translateX(-40px)}}
+
+/* cups */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h3{font-size:1.02rem;margin-bottom:12px}
+.cups{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cup{border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:12px 4px 10px;display:grid;justify-items:center;gap:4px;transition:transform .12s,border-color .12s}
+.cup:hover{border-color:var(--water);transform:translateY(-2px)}
+.cup:active{transform:scale(.96)}
+.cup svg{height:34px;width:auto}
+.cup b{font-family:var(--mono);font-weight:500;font-size:.95rem}
+.cup span{font-size:.76rem;color:var(--muted)}
+.custom{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:12px}
+.custom input[type=time]{width:auto}
+.btn{border:0;border-radius:10px;padding:9px 16px;background:var(--water);color:#fff;font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+.undo{margin-top:8px;font-size:.85rem;color:var(--muted)}
+.undo button{border:0;background:none;color:var(--ink);text-decoration:underline;padding:0 4px}
+
+/* timeline */
+.timeline{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.timeline li{display:flex;align-items:center;gap:6px;background:var(--water-soft);border-radius:999px;padding:4px 6px 4px 12px;font-size:.88rem}
+.timeline .t{color:var(--muted);font-family:var(--mono);font-size:.82rem}
+.timeline button{border:0;background:none;width:24px;height:24px;border-radius:50%;color:var(--muted);line-height:1}
+.timeline button:hover{background:var(--surface);color:var(--low)}
+.empty{color:var(--muted);font-size:.9rem}
+
+/* history */
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg);border-radius:12px;padding:10px 12px}
+.kpi b{display:block;font-family:var(--mono);font-weight:500;font-size:1.25rem;color:var(--ink)}
+.kpi span{font-size:.78rem;color:var(--muted)}
+.tbl{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:.78rem}
+td.r,th.r{text-align:right}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--water-soft)}
+tr.sel td{background:var(--water-soft)}
+
+/* profile */
+details.card summary{cursor:pointer;font-family:var(--display);font-size:1.02rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"แก้ไข";font-family:var(--sans);font-size:.82rem;color:var(--ink)}
+details[open].card summary::after{content:"ปิด"}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.form label{display:grid;gap:4px;font-size:.84rem;color:var(--muted)}
+.full{grid-column:1/-1}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px}
+.seg button[aria-pressed="true"]{background:var(--water);border-color:var(--water);color:#fff;font-weight:600}
+.check{display:flex!important;align-items:center;gap:8px;color:var(--fg)!important;font-size:.9rem!important}
+.check input{width:18px;height:18px}
+.formula{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.86rem}
+
+.note{font-size:.82rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:10px 12px}
+.foot{font-size:.78rem;color:var(--muted);text-align:center}
+
+/* welcome */
+.welcome{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:12px}
+.welcome h2{font-size:1.3rem}
+.welcome .row{display:flex;gap:8px}
+.welcome .btn{white-space:nowrap}
+
+/* tabs */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-block:8px;margin-block:-8px}
+.tabs nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px}
+.tabs a{display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:12px;text-decoration:none;color:var(--muted);font-size:.8rem;font-weight:500}
+.tabs a svg{width:20px;height:20px}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current="page"]{background:var(--water);color:#fff}
+.view{display:grid;gap:16px}
+
+/* article */
+.lead{border-radius:24px;padding:26px 22px;min-height:230px;align-content:end;color:#fff;display:grid;gap:8px;
+  background:linear-gradient(180deg,rgba(6,30,40,.05) 0%,rgba(6,30,40,.55) 45%,rgba(6,30,40,.92)),var(--img,none) center/cover,#0d4a60;box-shadow:0 12px 30px -16px rgba(6,40,54,.55)}
+.lead .eyebrow{color:#9fe3f5!important}
+.lead p{color:rgba(255,255,255,.85)!important}
+.lead .eyebrow{font-size:.76rem;letter-spacing:.08em;color:var(--ink);font-weight:600}
+.lead h2{font-size:1.5rem;line-height:1.3}
+.lead p{margin:0;color:var(--muted);max-width:60ch}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.mini{background:var(--bg);border-radius:14px;padding:12px;display:grid;gap:4px;align-content:start}
+.ph{border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--line);display:grid;align-content:start}
+.ph .pic{aspect-ratio:4/3;background:var(--img,none) center/cover,var(--water-soft)}
+.ph .tx{padding:10px 12px 12px;display:grid;gap:2px}
+.ph b{font-family:var(--display);font-weight:500}
+.ph span{font-size:.84rem;color:var(--muted);line-height:1.45}
+.agewrap{display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:start}
+.agepic{aspect-ratio:3/4;border-radius:16px;background:var(--img,none) center/cover,var(--water-soft)}
+.vit .vpic{height:96px;margin:-14px -14px 4px;border-radius:16px 16px 0 0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.25)),var(--img,none) center/cover,var(--vc)}
+.vit{overflow:hidden}
+.credit{font-size:.74rem;color:var(--muted)}
+.mini .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--water-soft);color:var(--ink);font-family:var(--display);font-size:1rem}
+.mini b{font-weight:600;font-size:.92rem}
+.mini span{font-size:.84rem;color:var(--muted);line-height:1.45}
+.levels{display:grid;gap:10px}
+.level{display:grid;grid-template-columns:6px 1fr;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px 12px 0;overflow:hidden}
+.level::before{content:"";border-radius:0 4px 4px 0;background:var(--c)}
+.level h4{margin:0 0 2px;font-size:.92rem;font-family:var(--display);font-weight:500;color:var(--c)}
+.level p{margin:0;font-size:.86rem;color:var(--muted)}
+.urine{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:6px}
+.urine button{aspect-ratio:1/1.4;max-width:100%;border:2px solid transparent;border-radius:8px;background:var(--u);font-family:var(--mono);font-size:.75rem;color:#3d3000}
+.urine button[aria-pressed="true"]{border-color:var(--fg)}
+.urine-out{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:.88rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 14px;font-size:.86rem}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+.age{display:grid;gap:10px}
+.age h4{margin:0;font-family:var(--display);font-weight:500;font-size:1.05rem}
+.age ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.9rem}
+.age .need{display:inline-block;background:var(--water-soft);color:var(--ink);border-radius:8px;padding:2px 10px;font-size:.84rem;font-weight:600}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.vit{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px;align-content:start}
+.vit header{display:flex;gap:10px;align-items:center}
+.vbadge{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-family:var(--display);font-size:1.05rem;color:#fff;background:var(--vc);flex:none}
+.vit h4{margin:0;font-family:var(--display);font-weight:500;font-size:1rem}
+.vit .kind{font-size:.74rem;color:var(--muted)}
+.vit dl{margin:0;display:grid;gap:6px;font-size:.86rem}
+.vit dt{font-size:.72rem;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.vit dd{margin:0}
+.vit .warn{font-size:.8rem;color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent);border-radius:8px;padding:6px 8px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.menu{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid;align-content:start}
+.menu .top{height:150px;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.35)),var(--img,none) center/cover,var(--mc);position:relative;display:flex;align-items:flex-end;padding:10px 14px}
+.menu{transition:transform .15s,box-shadow .15s}.menu:hover{transform:translateY(-3px);box-shadow:0 14px 28px -18px rgba(6,40,54,.6)}
+.menu .top span{font-size:.72rem;font-weight:600;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.18);border-radius:999px;padding:2px 10px}
+.menu .body{padding:12px 14px 14px;display:grid;gap:6px}
+.menu h4{margin:0;font-family:var(--display);font-weight:500;font-size:1.02rem}
+.menu p{margin:0;font-size:.86rem;color:var(--muted)}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tags i{font-style:normal;font-size:.72rem;background:var(--water-soft);color:var(--ink);border-radius:6px;padding:1px 7px}
+.list2{margin:0;padding-left:1.1em;display:grid;gap:6px;font-size:.9rem}
+.src{font-size:.8rem;color:var(--muted)}
+
+@media (max-width:460px){
+  .tabs a{font-size:.74rem}
+  .urine{grid-template-columns:repeat(4,1fr)}
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center;background:linear-gradient(180deg,rgba(6,40,54,.55),rgba(6,40,54,.9)),var(--img,none) center/cover,#0d4a60}
+  .agewrap{grid-template-columns:1fr}.agepic{aspect-ratio:16/9}
+  .hero .big,.hero .status-row{justify-content:center}
+  .cups{grid-template-columns:repeat(2,1fr)}
+  .form{grid-template-columns:1fr}
+  .custom{grid-template-columns:1fr auto}
+  .custom .btn{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){.wave{animation:none}.cup{transition:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="brand">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5C9 7 5.5 10.6 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10.6 15 7 12 2.5z" fill="var(--water)"/><path d="M9 15a3 3 0 0 0 3 3" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      <div>จิบดี <small>สมุดดื่มน้ำรายวัน</small></div>
+    </div>
+    <div class="datebar">
+      <button id="prev" aria-label="วันก่อนหน้า">‹</button>
+      <input type="date" id="day" aria-label="เลือกวันที่">
+      <button id="next" aria-label="วันถัดไป">›</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <nav aria-label="เมนูหลัก">
+      <a href="#log" data-v="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3c-3 4.5-6 8-6 11.5a6 6 0 0 0 12 0C18 11 15 7.5 12 3z"/></svg>บันทึก</a>
+      <a href="#water" data-v="water"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M6 5l1.5 15h9L18 5M7 11h10"/></svg>ความรู้น้ำ</a>
+      <a href="#vitamins" data-v="vitamins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-35 12 12)"/><path d="M9.5 8.5l5 7"/></svg>วิตามิน</a>
+      <a href="#food" data-v="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h18a9 9 0 0 1-18 0zM8 8c0-2 2-2 2-4M13 8c0-2 2-2 2-4"/></svg>เมนูแนะนำ</a>
+    </nav>
+  </div>
+
+  <div class="view" id="v-log">
+  <section class="welcome" id="welcome" hidden>
+    <h2>ยินดีต้อนรับสู่จิบดี</h2>
+    <p class="muted" style="margin:0">บอกชื่อที่อยากให้เรียก แล้วกรอกน้ำหนักกับกิจกรรมด้านล่าง ระบบจะคำนวณปริมาณน้ำที่ควรดื่มต่อวันให้</p>
+    <form class="row" id="welcomeForm">
+      <input id="welcomeName" maxlength="30" placeholder="ชื่อของคุณ" autocomplete="nickname">
+      <button class="btn" type="submit">เริ่มใช้</button>
+    </form>
+  </section>
+
+  <section class="hero" aria-live="polite" style="--img:url('https://images.unsplash.com/photo-1781510350868-b81dfa490295?auto=format&fit=crop&w=1200&q=70')">
+    <svg class="glass" viewBox="0 0 110 150" role="img" aria-label="ระดับน้ำที่ดื่ม">
+      <defs><clipPath id="cup"><path d="M14 8h82l-9 132a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6z"/></clipPath></defs>
+      <path d="M14 8h82l-9 132a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6z" fill="var(--water-soft)"/>
+      <g clip-path="url(#cup)">
+        <g id="waterLevel" transform="translate(0,150)">
+          <path class="wave" d="M0 6 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V160 H0z" fill="var(--water-2)" opacity=".7"/>
+          <path class="wave" style="animation-duration:3s" d="M-10 9 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V160 H-10z" fill="var(--water)"/>
+        </g>
+      </g>
+      <path d="M14 8h82l-9 132a6 6 0 0 1-6 6H29a6 6 0 0 1-6-6z" fill="none" stroke="var(--ink)" stroke-width="2.5" opacity=".55"/>
+      <text id="pctText" x="55" y="84" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="20" fill="var(--fg)">0%</text>
+    </svg>
+    <div class="stats">
+      <div>
+        <h2 id="greet">สวัสดี</h2>
+        <div class="date" id="dayLabel"></div>
+      </div>
+      <div class="big"><b id="total">0</b><span class="muted">/ <span class="num" id="goal">0</span> ml</span></div>
+      <div class="status-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="status s-none" id="status">ยังไม่มีบันทึก</span>
+        <span class="muted" id="remain"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>ดื่มไปเท่าไหร่</h3>
+    <div class="cups" id="cups"></div>
+    <form class="custom" id="customForm">
+      <input type="number" id="customMl" min="10" max="2000" step="10" placeholder="ปริมาณอื่น (ml)" inputmode="numeric">
+      <input type="time" id="customTime" aria-label="เวลา">
+      <button class="btn" type="submit">เพิ่ม</button>
+    </form>
+    <div class="undo" id="undo" hidden></div>
+  </section>
+
+  <section class="card">
+    <h3 id="logTitle">บันทึกวันนี้</h3>
+    <ul class="timeline" id="log"></ul>
+  </section>
+
+  <section class="card">
+    <h3>ย้อนหลัง 14 วัน</h3>
+    <div class="kpis">
+      <div class="kpi"><b id="kDays">0</b><span>วันที่บันทึก</span></div>
+      <div class="kpi"><b id="kHit">0</b><span>วันที่ถึงเป้า</span></div>
+      <div class="kpi"><b id="kAvg">0</b><span>เฉลี่ย ml/วัน</span></div>
+    </div>
+    <div class="chart" id="chart"></div>
+    <div class="legend">
+      <span><i style="background:var(--ok)"></i>ถึงเป้า</span>
+      <span><i style="background:var(--water)"></i>ใกล้เป้า</span>
+      <span><i style="background:var(--warn)"></i>ต่ำกว่าเป้า</span>
+      <span><i style="background:var(--low)"></i>น้อยเกินไป</span>
+      <span>– – เป้าหมายวันนั้น</span>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>วันที่</th><th class="r">ดื่ม</th><th class="r">เป้า</th><th class="r">%</th><th>ผล</th></tr></thead>
+        <tbody id="hist"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="card" id="setupBox">
+    <summary>ข้อมูลของฉัน</summary>
+    <div class="form">
+      <label class="full">ชื่อที่ให้เรียก
+        <input id="name" maxlength="30" placeholder="เช่น ออส" autocomplete="nickname">
+      </label>
+      <div class="full" style="display:grid;gap:4px">
+        <span class="muted" style="font-size:.84rem">เพศ</span>
+        <div class="seg" id="sexSeg">
+          <button type="button" data-v="m" aria-pressed="true">ชาย</button>
+          <button type="button" data-v="f" aria-pressed="false">หญิง</button>
+        </div>
+      </div>
+      <label>น้ำหนักตัว (kg)
+        <input type="number" id="weight" min="20" max="250" step="0.5" inputmode="decimal">
+      </label>
+      <label>กิจกรรมต่อวัน
+        <select id="activity">
+          <option value="0">นั่งทำงานเป็นหลัก</option>
+          <option value="350">เบา (~30 นาที)</option>
+          <option value="700">ปานกลาง (~60 นาที)</option>
+          <option value="1000">หนัก (&gt;90 นาที)</option>
+        </select>
+      </label>
+      <label class="full check"><input type="checkbox" id="heat"> ทำงานหรืออยู่ในที่ร้อน เหงื่อออกมาก</label>
+      <div class="full formula" id="formula"></div>
+    </div>
+  </details>
+
+  <p class="note">⚠ ค่าเป้าหมายเป็นการประมาณ ไม่ใช่คำแนะนำทางการแพทย์ ผู้มีโรคไต โรคหัวใจ หรือแพทย์สั่งจำกัดน้ำ ให้ใช้ค่าตามแพทย์กำหนด ไม่ควรดื่มเกินประมาณ 1 ลิตรต่อชั่วโมง ผู้ทำงานในที่ร้อนควรจิบน้ำทุก 15–20 นาที</p>
+  </div>
+
+  <!-- ===== ความรู้เรื่องน้ำ ===== -->
+  <div class="view" id="v-water" hidden>
+    <section class="lead" style="--img:url('https://images.unsplash.com/photo-1758738880344-373b29019b33?auto=format&fit=crop&w=1200&q=70')">
+      <span class="eyebrow">ความรู้เรื่องน้ำ</span>
+      <h2>ร่างกายเราเป็นน้ำราว 50–60%</h2>
+      <p>เราเสียน้ำตลอดวันทางเหงื่อ ลมหายใจ ปัสสาวะ และอุจจาระ ถ้าดื่มชดเชยไม่พอ ร่างกายจะทำงานได้ไม่เต็มที่ แม้ขาดน้ำเพียงเล็กน้อยก็รู้สึกได้</p>
+    </section>
+
+    <section class="card">
+      <h3>ประโยชน์ของการดื่มน้ำให้พอ</h3>
+      <div class="grid-cards">
+        <div class="mini"><div class="ic">°C</div><b>คุมอุณหภูมิร่างกาย</b><span>ระบายความร้อนผ่านเหงื่อ สำคัญมากเมื่ออากาศร้อนหรือออกแรง</span></div>
+        <div class="mini"><div class="ic">⇄</div><b>ลำเลียงสารอาหาร</b><span>น้ำเป็นส่วนประกอบหลักของเลือด ช่วยพาออกซิเจนและสารอาหารไปเลี้ยงเซลล์</span></div>
+        <div class="mini"><div class="ic">◐</div><b>ช่วยไตขับของเสีย</b><span>ปัสสาวะเจือจาง ลดความเสี่ยงนิ่วในไตและทางเดินปัสสาวะอักเสบ</span></div>
+        <div class="mini"><div class="ic">≈</div><b>ระบบขับถ่ายดี</b><span>ร่วมกับใยอาหาร ช่วยให้อุจจาระนุ่ม ลดอาการท้องผูก</span></div>
+        <div class="mini"><div class="ic">✦</div><b>สมองและสมาธิ</b><span>การขาดน้ำเล็กน้อยทำให้ปวดหัว เหนื่อยง่าย และสมาธิลดลง</span></div>
+        <div class="mini"><div class="ic">○</div><b>ข้อต่อและเนื้อเยื่อ</b><span>เป็นส่วนประกอบของน้ำไขข้อ น้ำลาย และเยื่อบุต่าง ๆ</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>ถ้าดื่มน้ำไม่พอ จะเกิดอะไรขึ้น</h3>
+      <div class="levels">
+        <div class="level" style="--c:var(--warn)"><div><h4>ขาดน้ำเล็กน้อย</h4><p>กระหายน้ำ ปากและริมฝีปากแห้ง ปัสสาวะน้อยและสีเข้ม ปวดหัว อ่อนเพลีย สมาธิลดลง → ดื่มน้ำเพิ่มและพักในที่ร่ม</p></div></div>
+        <div class="level" style="--c:var(--low)"><div><h4>ขาดน้ำปานกลาง</h4><p>เวียนหัวเมื่อลุกยืน หัวใจเต้นเร็ว ตะคริว ปัสสาวะน้อยมาก → หยุดพัก ดื่มน้ำหรือผงเกลือแร่ (ORS) ทีละน้อย ถ้าไม่ดีขึ้นควรพบแพทย์</p></div></div>
+        <div class="level" style="--c:#9b1c1c"><div><h4>ขาดน้ำรุนแรง (ฉุกเฉิน)</h4><p>สับสน ซึม พูดไม่รู้เรื่อง ตัวร้อนจัดแต่ไม่มีเหงื่อ ชัก หรือหมดสติ อาจเป็นโรคลมแดด (Heat stroke) → โทร 1669 ทันที พาเข้าที่ร่ม คลายเสื้อผ้า เช็ดตัวด้วยน้ำเพื่อลดอุณหภูมิ ห้ามให้ดื่มน้ำถ้าไม่รู้สึกตัว</p></div></div>
+        <div class="level" style="--c:var(--muted)"><div><h4>ผลระยะยาวถ้าดื่มน้อยเป็นประจำ</h4><p>ท้องผูก นิ่วในไต ทางเดินปัสสาวะติดเชื้อง่าย ผิวแห้ง และเหนื่อยล้าเรื้อรัง</p></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>เช็กสีปัสสาวะ</h3>
+      <p class="muted" style="margin:0">แตะสีที่ใกล้เคียงปัสสาวะของคุณมากที่สุด (ใช้เป็นแนวทางคร่าว ๆ เท่านั้น)</p>
+      <div class="urine" id="urine"></div>
+      <div class="urine-out" id="urineOut">เลือกสีเพื่อดูผล</div>
+    </section>
+
+    <section class="card">
+      <h3>ดูแลตัวเองตามช่วงวัย</h3>
+      <div class="chips" id="ageChips"></div>
+      <div class="age" id="ageBox"></div>
+    </section>
+
+    <section class="card">
+      <h3>ดื่มมากไปก็ไม่ดี</h3>
+      <ul class="list2">
+        <li>ดื่มน้ำปริมาณมากในเวลาสั้น ๆ อาจทำให้โซเดียมในเลือดต่ำ (Hyponatremia) มีอาการคลื่นไส้ ปวดหัว สับสน หรืออาจรุนแรงถึงชัก</li>
+        <li>ควรค่อย ๆ จิบตลอดวัน ไม่ต้องดื่มรวดเดียว และไม่ควรเกินประมาณ 1 ลิตรต่อชั่วโมง</li>
+        <li>ถ้าเหงื่อออกมากหลายชั่วโมง ให้ดื่มน้ำสลับกับเครื่องดื่มเกลือแร่ เพื่อชดเชยโซเดียมที่เสียไป</li>
+        <li>ผู้ป่วยโรคไต โรคหัวใจ หรือโรคตับ ให้ดื่มตามปริมาณที่แพทย์กำหนด</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ===== วิตามิน ===== -->
+  <div class="view" id="v-vitamins" hidden>
+    <section class="lead" style="--img:url('https://images.unsplash.com/photo-1693399991519-bef70bed19a2?auto=format&fit=crop&w=1200&q=70')">
+      <span class="eyebrow">วิตามิน</span>
+      <h2>วิตามิน 13 ชนิดที่ร่างกายต้องการ</h2>
+      <p>ร่างกายต้องการวิตามินปริมาณน้อย แต่ขาดไม่ได้ ส่วนใหญ่ได้จากอาหารที่หลากหลาย วิตามินที่ละลายในไขมัน (A, D, E, K) สะสมในร่างกายได้ จึงเกินขนาดได้ถ้ากินอาหารเสริมมาก ส่วนวิตามินที่ละลายในน้ำ (B, C) ส่วนเกินขับออกทางปัสสาวะ จึงต้องได้รับทุกวัน</p>
+    </section>
+    <div class="chips" id="vitChips"></div>
+    <div class="vgrid" id="vitGrid"></div>
+    <p class="note">⚠ ข้อมูลนี้เป็นความรู้ทั่วไป ควรได้วิตามินจากอาหารเป็นหลัก ก่อนกินวิตามินเสริมขนาดสูง โดยเฉพาะหญิงตั้งครรภ์ ผู้สูงอายุ และผู้ที่ใช้ยาประจำ ควรปรึกษาแพทย์หรือเภสัชกร</p>
+  </div>
+
+  <!-- ===== อาหารและเมนู ===== -->
+  <div class="view" id="v-food" hidden>
+    <section class="lead" style="--img:url('https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=1200&q=70')">
+      <span class="eyebrow">อาหารและเมนูแนะนำ</span>
+      <h2>กินให้ได้ทั้งน้ำและวิตามิน</h2>
+      <p>น้ำที่ร่างกายได้รับราว 20% มาจากอาหาร โดยเฉพาะผัก ผลไม้ และแกงจืด เลือกเมนูไทยที่ใช้ผักหลายสี ใช้วิธีนึ่ง ต้ม หรือลวก และลดเค็ม จะได้ทั้งน้ำ วิตามิน และใยอาหาร</p>
+    </section>
+
+    <section class="card">
+      <h3>ผัก-ผลไม้ที่มีน้ำมาก</h3>
+      <div class="grid-cards" id="hydroFoods"></div>
+    </section>
+
+    <section class="card">
+      <h3>เมนูแนะนำ</h3>
+      <div class="chips" id="mealChips"></div>
+      <div class="mgrid" id="menuGrid"></div>
+    </section>
+
+    <section class="card">
+      <h3>เครื่องดื่ม ควรเลือกอย่างไร</h3>
+      <ul class="list2">
+        <li><b>น้ำเปล่า</b> ดีที่สุด ไม่มีพลังงานและน้ำตาล</li>
+        <li><b>ชา กาแฟ</b> นับเป็นน้ำได้ ถ้าดื่มพอประมาณ (ประมาณ 1–3 แก้วต่อวัน) และไม่ใส่น้ำตาลหรือครีมมาก</li>
+        <li><b>น้ำหวาน น้ำอัดลม ชานม</b> มีน้ำตาลสูง ไม่ควรใช้แทนน้ำเปล่า</li>
+        <li><b>เครื่องดื่มเกลือแร่ / ORS</b> ใช้เมื่อเหงื่อออกมาก ท้องเสีย หรืออาเจียน ไม่จำเป็นในวันปกติ</li>
+        <li><b>น้ำมะพร้าว</b> มีโพแทสเซียมสูง ผู้ป่วยโรคไตควรปรึกษาแพทย์ก่อนดื่ม</li>
+        <li><b>แอลกอฮอล์</b> ทำให้ปัสสาวะมากขึ้นและเสียน้ำ ไม่นับเป็นน้ำดื่ม</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h3>สำหรับคนทำงานในที่ร้อน</h3>
+      <ul class="list2">
+        <li>ดื่มน้ำ 1 แก้วก่อนเริ่มงาน แล้วจิบประมาณ 1 แก้ว (≈250 ml) ทุก 15–20 นาที ไม่ต้องรอให้กระหาย</li>
+        <li>มื้อกลางวันเลือกแกงจืด ต้มจืด ผัก ผลไม้ เช่น แตงโม ส้ม เพื่อเสริมน้ำและเกลือแร่</li>
+        <li>ถ้าเหงื่อออกมากต่อเนื่องหลายชั่วโมง สลับดื่มเครื่องดื่มเกลือแร่</li>
+        <li>หลีกเลี่ยงแอลกอฮอล์คืนก่อนวันทำงาน และเครื่องดื่มหวานจัดระหว่างทำงาน</li>
+      </ul>
+    </section>
+    <p class="note">⚠ ผู้ที่มีโรคประจำตัว เช่น เบาหวาน ความดัน โรคไต ควรปรับเมนูตามคำแนะนำของแพทย์หรือนักกำหนดอาหาร</p>
+  </div>
+
+  <p class="src">ภาพประกอบ: Unsplash (ใช้ภายใต้ Unsplash License) · ข้อมูลในหน้านี้เป็นความรู้สุขภาพทั่วไป สรุปจากแนวทางของหน่วยงานด้านสุขภาพ เช่น WHO, กรมอนามัย, EFSA และ NIH Office of Dietary Supplements ไม่ใช่การวินิจฉัยหรือรักษาโรค</p>
+  <p class="foot" id="storeNote"></p>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const DEF_PROFILE={name:"",sex:"m",weight:60,activity:0,heat:false};
+const CUPS=[
+  {ml:150,label:"แก้วเล็ก",h:.55},{ml:250,label:"แก้ว",h:.75},
+  {ml:350,label:"ขวดเล็ก",h:.85,bottle:1},{ml:500,label:"ขวด",h:1,bottle:1}];
+let profile={...DEF_PROFILE}, days={}, current=todayStr(), store=null, loaded=false, lastAdd=null;
+
+function todayStr(d=new Date()){const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())}
+function shift(ds,n){const d=new Date(ds+"T12:00:00");d.setDate(d.getDate()+n);return todayStr(d)}
+function fmt(n){return Math.round(n).toLocaleString("en-US")}
+function thDate(ds,long){const d=new Date(ds+"T12:00:00");return d.toLocaleDateString("th-TH",long?{weekday:"long",day:"numeric",month:"long",year:"numeric"}:{weekday:"short",day:"numeric",month:"short"})}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+/* เป้าหมาย (ml/วัน) = น้ำหนัก(kg) × [ชาย 35 / หญิง 31] + กิจกรรม + ที่ร้อน 500 → ปัดทีละ 50 ml (ต่ำสุด 1,200) */
+function calcGoal(p){
+  const g=(+p.weight||0)*(p.sex==="f"?31:35)+(+p.activity||0)+(p.heat?500:0);
+  return Math.round(Math.max(g,1200)/50)*50;
+}
+function evaluate(total,goal){
+  if(!total) return {cls:"s-none",label:"ยังไม่มีบันทึก",msg:""};
+  const pct=total/goal*100;
+  if(total>goal+1500) return {cls:"s-under",label:"ดื่มมากเกินเป้ามาก",msg:"ค่อย ๆ ดื่ม ไม่ต้องเร่ง"};
+  if(pct>=100) return {cls:"s-ok",label:"ถึงเป้าแล้ว",msg:"เยี่ยมมาก"};
+  if(pct>=75) return {cls:"s-near",label:"ใกล้เป้า",msg:"อีกนิดเดียว"};
+  if(pct>=50) return {cls:"s-under",label:"ต่ำกว่าเป้า",msg:"จิบเพิ่มอีกหน่อย"};
+  return {cls:"s-low",label:"น้อยเกินไป",msg:"อย่าลืมดื่มน้ำ"};
+}
+const dayOf=ds=>days[ds]||{entries:[],goal:null};
+const goalOf=ds=>(days[ds]&&days[ds].goal)||calcGoal(profile);
+const totalOf=ds=>dayOf(ds).entries.reduce((a,e)=>a+(+e.ml||0),0);
+function greeting(){const h=new Date().getHours();return h<12?"อรุณสวัสดิ์":h<17?"สวัสดีตอนบ่าย":"สวัสดีตอนเย็น"}
+
+function cupSvg(c){
+  const H=34,h=H*c.h,top=H-h;
+  return c.bottle
+    ?'<svg viewBox="0 0 24 34" aria-hidden="true"><rect x="9" y="'+(top)+'" width="6" height="3" rx="1" fill="var(--ink)"/><path d="M7 '+(top+5)+'q0-2 3-2h4q3 0 3 2v'+(h-7)+'a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" fill="var(--water)"/></svg>'
+    :'<svg viewBox="0 0 24 34" aria-hidden="true"><path d="M4 '+top+'h16l-2 '+(h-1)+'a1.5 1.5 0 0 1-1.5 1H7.5A1.5 1.5 0 0 1 6 33z" fill="var(--water)"/></svg>';
+}
+$("cups").innerHTML=CUPS.map(c=>'<button class="cup" data-ml="'+c.ml+'" aria-label="เพิ่ม '+c.ml+' ml">'+cupSvg(c)+'<b>+'+c.ml+'</b><span>'+c.label+'</span></button>').join("");
+
+function render(){
+  const isToday=current===todayStr();
+  $("day").value=current;$("day").max=todayStr();$("next").disabled=current>=todayStr();
+  $("greet").textContent=(isToday?greeting():"ย้อนดูวันที่ผ่านมา")+(profile.name?" คุณ"+profile.name:"");
+  $("dayLabel").textContent=thDate(current,true);
+  const total=totalOf(current),goal=goalOf(current),ev=evaluate(total,goal),pct=total/goal*100;
+  $("total").textContent=fmt(total);$("goal").textContent=fmt(goal);
+  // glass: water top from y=150 (empty) to y=8 (full)
+  const lvl=150-142*Math.min(1,pct/100);
+  $("waterLevel").setAttribute("transform","translate(0,"+(lvl-6)+")");
+  $("pctText").textContent=Math.round(pct)+"%";
+  $("pctText").setAttribute("fill",pct>50?"#fff":"var(--fg)");
+  const st=$("status");st.className="status "+ev.cls;st.textContent=ev.label;
+  $("remain").textContent=total<goal?"เหลืออีก "+fmt(goal-total)+" ml":ev.msg;
+  $("logTitle").textContent=isToday?"บันทึกวันนี้":"บันทึกวันที่ "+thDate(current);
+  const ents=dayOf(current).entries.map((e,i)=>({...e,i})).sort((a,b)=>a.t.localeCompare(b.t));
+  $("log").innerHTML=ents.length?ents.map(e=>'<li><span class="t">'+esc(e.t)+'</span><span class="num">'+fmt(e.ml)+'</span> ml<button data-i="'+e.i+'" aria-label="ลบรายการ '+esc(e.t)+'">×</button></li>').join("")
+    :'<li class="empty" style="background:none;padding:0">ยังไม่มีรายการ แตะแก้วด้านบนเพื่อบันทึกแก้วแรก</li>';
+  // profile form
+  if(document.activeElement!==$("name"))$("name").value=profile.name||"";
+  if(document.activeElement!==$("weight"))$("weight").value=profile.weight;
+  $("sexSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===profile.sex)));
+  $("activity").value=String(profile.activity);$("heat").checked=!!profile.heat;
+  const perKg=profile.sex==="f"?31:35;
+  $("formula").innerHTML="<b>เป้าหมายของคุณ <span class='num'>"+fmt(calcGoal(profile))+"</span> ml/วัน</b> (การประมาณ)<br><span class='muted'>"+profile.weight+" kg × "+perKg+" ml/kg"+(profile.activity?" + กิจกรรม "+fmt(profile.activity):"")+(profile.heat?" + ที่ร้อน 500":"")+" ml</span>";
+  $("welcome").hidden=!loaded||!!profile.name;
+  renderHistory();
+}
+
+function renderHistory(){
+  const list=[];for(let i=13;i>=0;i--){const ds=shift(todayStr(),-i);list.push({ds,total:totalOf(ds),goal:goalOf(ds)})}
+  const W=540,H=180,pl=34,pb=26,pt=10,bw=(W-pl-6)/14;
+  const max=Math.max(...list.map(d=>Math.max(d.total,d.goal)))*1.12||3000;
+  const y=v=>pt+(H-pt-pb)*(1-v/max);
+  const col={"s-ok":"var(--ok)","s-near":"var(--water)","s-under":"var(--warn)","s-low":"var(--low)"};
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="กราฟปริมาณน้ำย้อนหลัง 14 วัน">';
+  const step=max>4500?1000:500;
+  for(let v=0;v<=max;v+=step)s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(pl-5)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="10" fill="var(--muted)">'+(v/1000)+'L</text>';
+  list.forEach((d,i)=>{
+    const x=pl+i*bw+bw*.2,w=bw*.6,ev=evaluate(d.total,d.goal),sel=d.ds===current;
+    if(sel)s+='<rect x="'+(pl+i*bw+2)+'" y="'+pt+'" width="'+(bw-4)+'" height="'+(H-pt-pb)+'" rx="6" fill="var(--water-soft)"/>';
+    if(d.total)s+='<rect x="'+x+'" y="'+y(d.total)+'" width="'+w+'" height="'+(y(0)-y(d.total))+'" rx="4" fill="'+col[ev.cls]+'"/>';
+    s+='<line x1="'+(x-3)+'" x2="'+(x+w+3)+'" y1="'+y(d.goal)+'" y2="'+y(d.goal)+'" stroke="var(--fg)" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="3 2"/>';
+    s+='<text x="'+(x+w/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="10.5" fill="'+(sel?"var(--ink)":"var(--muted)")+'" font-weight="'+(sel?600:400)+'">'+(+d.ds.slice(8))+'</text>';
+    s+='<rect data-ds="'+d.ds+'" x="'+(pl+i*bw)+'" y="0" width="'+bw+'" height="'+H+'" fill="transparent" style="cursor:pointer"><title>'+thDate(d.ds)+': '+fmt(d.total)+' / '+fmt(d.goal)+' ml</title></rect>';
+  });
+  $("chart").innerHTML=s+'</svg>';
+  const rows=list.slice().reverse().filter(d=>d.total||d.ds===current);
+  $("hist").innerHTML=rows.map(d=>{const ev=evaluate(d.total,d.goal);
+    return '<tr class="click'+(d.ds===current?' sel':'')+'" data-ds="'+d.ds+'"><td>'+thDate(d.ds)+'</td><td class="r num">'+(d.total?fmt(d.total):"–")+'</td><td class="r num">'+fmt(d.goal)+'</td><td class="r num">'+(d.total?Math.round(d.total/d.goal*100):"–")+'</td><td><span class="status '+ev.cls+'">'+ev.label+'</span></td></tr>'}).join("");
+  const logged=list.filter(d=>d.total);
+  $("kDays").textContent=logged.length;
+  $("kHit").textContent=logged.filter(d=>d.total>=d.goal).length;
+  $("kAvg").textContent=logged.length?fmt(logged.reduce((a,d)=>a+d.total,0)/logged.length):"–";
+}
+
+function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function saveDay(ds){const d=dayOf(ds);d.goal=d.goal||calcGoal(profile);days[ds]=d;store&&store.saveDay(ds,{date:ds,goal:d.goal,entries:d.entries})}
+function addEntry(ml,t){
+  ml=Math.round(+ml);if(!(ml>0&&ml<=2000))return;
+  const d=dayOf(current),e={t:t||(current===todayStr()?nowHM():"12:00"),ml};
+  d.entries=[...d.entries,e];days[current]=d;saveDay(current);lastAdd={ds:current,e};
+  const u=$("undo");u.hidden=false;u.innerHTML='บันทึก '+fmt(ml)+' ml แล้ว <button id="undoBtn">เลิกทำ</button>';
+  $("undoBtn").onclick=undo;clearTimeout(addEntry.t);addEntry.t=setTimeout(()=>{u.hidden=true},6000);
+  render();
+}
+function undo(){if(!lastAdd)return;const d=dayOf(lastAdd.ds);d.entries=d.entries.filter(x=>x!==lastAdd.e);days[lastAdd.ds]=d;saveDay(lastAdd.ds);lastAdd=null;$("undo").hidden=true;render()}
+function removeEntry(i){const d=dayOf(current);d.entries=d.entries.filter((_,k)=>k!==i);days[current]=d;saveDay(current);render()}
+
+$("cups").addEventListener("click",e=>{const b=e.target.closest(".cup");if(b)addEntry(b.dataset.ml)});
+$("customForm").addEventListener("submit",e=>{e.preventDefault();addEntry($("customMl").value,$("customTime").value||null);$("customMl").value=""});
+$("log").addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(b)removeEntry(+b.dataset.i)});
+const goDay=ds=>{if(ds&&ds<=todayStr()){current=ds;render()}};
+$("hist").addEventListener("click",e=>{const r=e.target.closest("tr[data-ds]");if(r){goDay(r.dataset.ds);window.scrollTo({top:0,behavior:"smooth"})}});
+$("chart").addEventListener("click",e=>{const r=e.target.closest("[data-ds]");if(r)goDay(r.dataset.ds)});
+$("prev").onclick=()=>goDay(shift(current,-1));
+$("next").onclick=()=>goDay(shift(current,1));
+$("day").onchange=e=>{goDay(e.target.value);render()};
+
+let pTimer;
+function onProfile(patch){
+  profile={...profile,...patch};
+  const t=todayStr();if(days[t])days[t].goal=calcGoal(profile); // วันนี้ใช้ค่าใหม่ วันก่อนคงค่าเดิม
+  render();clearTimeout(pTimer);
+  pTimer=setTimeout(()=>{store&&store.saveProfile({...profile});if(days[t])saveDay(t)},600);
+}
+$("sexSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)onProfile({sex:b.dataset.v})});
+$("weight").addEventListener("change",e=>onProfile({weight:Math.min(250,Math.max(20,+e.target.value||60))}));
+$("activity").addEventListener("change",e=>onProfile({activity:+e.target.value}));
+$("heat").addEventListener("change",e=>onProfile({heat:e.target.checked}));
+$("name").addEventListener("input",e=>onProfile({name:e.target.value.trim().slice(0,30)}));
+$("welcomeForm").addEventListener("submit",e=>{e.preventDefault();const n=$("welcomeName").value.trim().slice(0,30);if(!n)return;onProfile({name:n});$("setupBox").open=true});
+
+/* ---- storage: claude db (private per user) → fallback localStorage ---- */
+function localStore(){
+  const K="jibdee.v1",OLD="waterlog.v1";
+  try{const raw=JSON.parse(localStorage.getItem(K)||localStorage.getItem(OLD)||"null");if(raw){profile={...DEF_PROFILE,...raw.profile};days=raw.days||{}}}catch(e){}
+  const save=()=>{try{localStorage.setItem(K,JSON.stringify({profile,days}))}catch(e){}};
+  $("storeNote").textContent="ข้อมูลเก็บไว้ในเบราว์เซอร์เครื่องนี้";
+  loaded=true;return {saveProfile:save,saveDay:save};
+}
+async function init(){
+  render();
+  let db=null,user=null;
+  try{if(window.claude&&window.claude.use)[db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")])}catch(e){}
+  const uid=user?await user.id().catch(()=>null):null;
+  if(!db||!uid){store=localStore();render();return}
+  const col=db.collection("data/users/"+uid);
+  const timer=setTimeout(()=>{$("storeNote").textContent="กำลังโหลดข้อมูลช้ากว่าปกติ…"},10000);
+  col.onSnapshot(snap=>{
+    clearTimeout(timer);
+    const nd={};let np=null;
+    snap.docs.forEach(d=>{const v=d.data();if(!v)return;if(d.id==="profile")np=v;else if(v.date)nd[v.date]={entries:(v.entries||[]).slice(),goal:v.goal}});
+    if(np)profile={...DEF_PROFILE,...np};
+    days=nd;loaded=true;
+    $("storeNote").textContent="ข้อมูลบันทึกในบัญชีของคุณ เปิดจากเครื่องไหนก็เห็นประวัติเดิม";
+    render();
+  },err=>{clearTimeout(timer);store=localStore();$("storeNote").textContent="เชื่อมต่อที่เก็บข้อมูลไม่ได้ ใช้ที่เก็บในเบราว์เซอร์แทน";render()});
+  const q={};
+  const write=(id,data)=>{q[id]=(q[id]||Promise.resolve()).then(()=>col.doc(id).set(data)).catch(e=>{$("storeNote").textContent="บันทึกไม่สำเร็จ: "+(e&&e.code||"error")})};
+  store={saveProfile:p=>write("profile",p),saveDay:(ds,data)=>write("day-"+ds,data)};
+}
+init();
+
+/* ---------- views / router ---------- */
+const VIEWS=["log","water","vitamins","food"];
+function route(){
+  const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):"log";
+  VIEWS.forEach(n=>{$("v-"+n).hidden=n!==v});
+  document.querySelector(".datebar").hidden=v!=="log";
+  document.querySelectorAll(".tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+}
+window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0})});
+route();
+
+function chips(el,items,onPick,start){
+  el.innerHTML=items.map(([k,l])=>'<button class="chip" data-k="'+k+'" aria-pressed="'+(k===start)+'">'+l+'</button>').join("");
+  el.addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;el.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c===b)));onPick(b.dataset.k)});
+  onPick(start);
+}
+
+const PIC=(id,w)=>"https://images.unsplash.com/photo-"+id+"?auto=format&fit=crop&w="+(w||600)+"&q=70";
+/* urine color */
+const URINE=[["#fbf6d9","ดีมาก ร่างกายได้น้ำเพียงพอ"],["#f8eda3","ดี ได้น้ำเพียงพอ"],["#f5e27a","ปกติ ดื่มต่อเนื่องตามเดิม"],["#f0d24c","เริ่มขาดน้ำ ควรดื่มน้ำเพิ่ม 1–2 แก้ว"],["#e6bb2a","ขาดน้ำ ดื่มน้ำเพิ่มทันที"],["#d29b17","ขาดน้ำมาก ดื่มน้ำและพักในที่ร่ม"],["#b57a10","ขาดน้ำรุนแรง ถ้ามีอาการเวียนหัวหรือสับสนให้พบแพทย์"],["#8a5a0c","อาจขาดน้ำรุนแรงหรือมีสาเหตุอื่น ควรพบแพทย์"]];
+$("urine").innerHTML=URINE.map((u,i)=>'<button style="--u:'+u[0]+'" data-i="'+i+'" aria-pressed="false" aria-label="ระดับสี '+(i+1)+'">'+(i+1)+'</button>').join("");
+$("urine").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const i=+b.dataset.i;
+  $("urine").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  const c=i<3?"var(--ok)":i<5?"var(--warn)":"var(--low)";
+  $("urineOut").innerHTML='<b style="color:'+c+'">ระดับ '+(i+1)+':</b> '+URINE[i][1]+'<br><span class="muted">สีอาจเปลี่ยนจากวิตามินบี 2 ยาบางชนิด หรืออาหาร ถ้าปัสสาวะมีสีแดง น้ำตาลเข้ม หรือขุ่นผิดปกติ ควรพบแพทย์</span>'});
+
+/* age groups */
+const AGES={
+  kid:{img:"1529079337819-f6d0024bd364",t:"เด็กเล็ก (1–5 ปี)",need:"ขาดน้ำได้ง่ายกว่าผู้ใหญ่",li:["ให้ดื่มน้ำเปล่าเป็นหลัก แทนน้ำหวานและน้ำผลไม้กล่อง","เด็กอาจไม่บอกว่ากระหาย ผู้ใหญ่ควรชวนดื่มเป็นระยะ โดยเฉพาะหลังเล่นกลางแจ้ง","เมื่อท้องเสีย อาเจียน หรือมีไข้ ให้ป้อนผงเกลือแร่ ORS สำหรับเด็กทีละน้อย","อาการที่ต้องพบแพทย์ทันที: ซึม ไม่มีน้ำตาเวลาร้อง ไม่ปัสสาวะนานกว่า 6–8 ชั่วโมง กระหม่อมบุ๋ม"]},
+  teen:{img:"1600679472233-eabc13b79f07",t:"วัยเรียน / วัยรุ่น (6–18 ปี)",need:"ต้องการน้ำเพิ่มเมื่อเล่นกีฬา",li:["ดื่มน้ำก่อน ระหว่าง และหลังเล่นกีฬา","พกขวดน้ำไปโรงเรียน ลดน้ำอัดลมและชานมไข่มุก","ระวังเครื่องดื่มชูกำลังที่มีคาเฟอีนสูง ไม่เหมาะกับเด็กและวัยรุ่น","กินผักผลไม้ทุกมื้อ ได้ทั้งน้ำ วิตามิน และใยอาหาร"]},
+  adult:{img:"1587582423116-ec07293f0395",t:"วัยทำงาน (19–59 ปี)",need:"ใช้สูตรในหน้าบันทึกได้",li:["ตั้งขวดน้ำไว้ใกล้ตัว ดื่มทีละน้อยตลอดวัน","ทำงานในที่ร้อนหรือใช้แรงมาก ให้จิบน้ำทุก 15–20 นาที และพักในที่ร่ม","ดื่มกาแฟไม่เกินวันละ 2–3 แก้ว และไม่ใช้แทนน้ำเปล่า","สังเกตสีปัสสาวะ ถ้าเหลืองเข้มแปลว่าควรดื่มเพิ่ม"]},
+  preg:{img:"1457342813143-a1ae27448a82",t:"หญิงตั้งครรภ์ / ให้นมบุตร",need:"ต้องการน้ำเพิ่มจากปกติ",li:["ระหว่างตั้งครรภ์ต้องการน้ำเพิ่มขึ้นราว 300 ml ต่อวัน ช่วงให้นมเพิ่มขึ้นราว 700 ml ต่อวัน (แนวทาง EFSA)","ดื่มน้ำ 1 แก้วทุกครั้งที่ให้นมลูก","ถ้าคลื่นไส้หรือแพ้ท้อง ให้จิบน้ำทีละน้อยบ่อย ๆ","กรดโฟลิก ธาตุเหล็ก และวิตามินเสริมอื่น ๆ ให้กินตามที่แพทย์สั่ง"]},
+  elder:{img:"1758686254563-5c5ab338c8b9",t:"ผู้สูงอายุ (60 ปีขึ้นไป)",need:"รู้สึกกระหายน้อยลง เสี่ยงขาดน้ำโดยไม่รู้ตัว",li:["ตั้งเวลาดื่มน้ำ เช่น หลังตื่นนอน ก่อนและหลังอาหาร ไม่ต้องรอให้กระหาย","ดื่มช่วงเช้าถึงบ่ายให้มาก ลดช่วงก่อนนอน เพื่อไม่ต้องลุกเข้าห้องน้ำกลางคืน","เพิ่มน้ำจากอาหาร เช่น แกงจืด โจ๊ก ผลไม้เนื้อนุ่ม","ผู้ที่ใช้ยาขับปัสสาวะ หรือมีโรคหัวใจ/ไต ให้ดื่มตามปริมาณที่แพทย์กำหนด","อาการขาดน้ำในผู้สูงอายุอาจเป็นแค่สับสนหรือหกล้มง่าย ควรสังเกต"]}
+};
+chips($("ageChips"),[["kid","เด็กเล็ก"],["teen","วัยเรียน"],["adult","วัยทำงาน"],["preg","ตั้งครรภ์/ให้นม"],["elder","ผู้สูงอายุ"]],k=>{const a=AGES[k];
+  $("ageBox").innerHTML='<div class="agewrap"><div class="agepic" role="img" aria-label="'+a.t+'" style="--img:url(\''+PIC(a.img,500)+'\')"></div><div class="age"><h4>'+a.t+'</h4><span class="need">'+a.need+'</span><ul>'+a.li.map(x=>'<li>'+x+'</li>').join("")+'</ul></div></div>'},"adult");
+
+/* vitamins */
+const VIT=[
+ {k:"A",img:"1598170845058-32b9d6a5da37",n:"วิตามินเอ",f:"fat",c:"#e07a2b",fn:"ช่วยการมองเห็นในที่แสงน้อย บำรุงผิวและเยื่อบุ เสริมภูมิคุ้มกัน",src:"ตับ ไข่แดง ฟักทอง แครอท มะม่วงสุก ตำลึง ผักบุ้ง",def:"ตาบอดกลางคืน ตาแห้ง ผิวแห้งหยาบ ติดเชื้อง่าย",w:"เสริมขนาดสูงสะสมที่ตับได้ หญิงตั้งครรภ์ไม่ควรเสริมเอง"},
+ {k:"D",img:"1636861903715-f30a283fb068",n:"วิตามินดี",f:"fat",c:"#d9a514",fn:"ช่วยดูดซึมแคลเซียม เสริมกระดูกและฟัน การทำงานของกล้ามเนื้อ",src:"แสงแดด (ผิวสร้างเองได้) ปลาทู ปลาแซลมอน ไข่แดง นมเสริมวิตามินดี",def:"เด็ก: กระดูกอ่อน ขาโก่ง / ผู้ใหญ่: กระดูกบาง ปวดกระดูก กล้ามเนื้ออ่อนแรง",w:"เสริมมากเกินทำให้แคลเซียมในเลือดสูง ควรตรวจระดับก่อนเสริมขนาดสูง"},
+ {k:"E",img:"1608797178974-15b35a64ede9",n:"วิตามินอี",f:"fat",c:"#8a9a2a",fn:"ต้านอนุมูลอิสระ ปกป้องเยื่อหุ้มเซลล์",src:"น้ำมันรำข้าว อัลมอนด์ เมล็ดทานตะวัน ถั่ว ผักใบเขียว",def:"พบน้อย อาจมีอาการชาปลายประสาท กล้ามเนื้ออ่อนแรง",w:"เสริมขนาดสูงอาจทำให้เลือดออกง่าย"},
+ {k:"K",img:"1574316071802-0d684efa7bf5",n:"วิตามินเค",f:"fat",c:"#2f8f4e",fn:"ช่วยให้เลือดแข็งตัว และเสริมความแข็งแรงของกระดูก",src:"คะน้า ผักโขม บรอกโคลี กะหล่ำปลี ถั่วเหลืองหมัก",def:"เลือดออกง่าย ฟกช้ำง่าย แผลเลือดหยุดช้า",w:"ผู้ใช้ยาต้านการแข็งตัวของเลือด (เช่น warfarin) ควรกินผักใบเขียวปริมาณคงที่ และปรึกษาแพทย์"},
+ {k:"B1",img:"1607623814075-e51df1bdc82f",n:"ไทอามีน",f:"water",c:"#2a7fb8",fn:"เปลี่ยนคาร์โบไฮเดรตเป็นพลังงาน บำรุงระบบประสาทและหัวใจ",src:"เนื้อหมู ข้าวกล้อง ข้าวซ้อมมือ ถั่วเมล็ดแห้ง งา",def:"โรคเหน็บชา ชาปลายมือปลายเท้า อ่อนเพลีย เบื่ออาหาร",w:"ปลาร้าดิบ ปลาดิบ ชาเข้มข้น และหมาก มีสารทำลายวิตามินบี 1 ควรกินแต่น้อย"},
+ {k:"B2",img:"1550583724-b2692b85b150",n:"ไรโบฟลาวิน",f:"water",c:"#3b6fc9",fn:"ช่วยผลิตพลังงาน บำรุงผิว ตา และเยื่อบุ",src:"นม ไข่ ตับ เห็ด ผักใบเขียว",def:"ปากนกกระจอก ลิ้นอักเสบ ผิวหนังรอบจมูกอักเสบ",w:"ทำให้ปัสสาวะเป็นสีเหลืองสด ไม่เป็นอันตราย"},
+ {k:"B3",img:"1499125562588-29fb8a56b5d5",n:"ไนอาซิน",f:"water",c:"#4b5fd1",fn:"ช่วยเผาผลาญพลังงาน บำรุงผิวและระบบประสาท",src:"เนื้อสัตว์ ปลา ไก่ ถั่วลิสง ข้าวกล้อง",def:"โรคเพลลากรา: ผิวหนังอักเสบเมื่อโดนแดด ท้องเสีย สับสน",w:"เสริมขนาดสูงทำให้หน้าแดง ร้อนวูบวาบ และมีผลต่อตับ"},
+ {k:"B6",img:"1587132137056-bfbf0166836e",n:"ไพริดอกซีน",f:"water",c:"#5a52c9",fn:"ช่วยเผาผลาญโปรตีน สร้างเม็ดเลือดแดง และสารสื่อประสาท",src:"ไก่ ปลา กล้วย มันฝรั่ง ถั่ว ธัญพืช",def:"โลหิตจาง ผิวหนังอักเสบ ปากอักเสบ หงุดหงิดง่าย",w:"เสริมขนาดสูงเป็นเวลานานอาจทำให้ปลายประสาทอักเสบ ชาปลายมือปลายเท้า"},
+ {k:"B7",img:"1536816579748-4ecb3f03d72a",n:"ไบโอติน",f:"water",c:"#6d4fc0",fn:"ช่วยเผาผลาญไขมัน คาร์โบไฮเดรต และโปรตีน บำรุงผมและเล็บ",src:"ไข่แดงสุก ถั่ว เมล็ดพืช ตับ",def:"พบน้อย ผมร่วง ผิวหนังอักเสบ",w:"ไข่ขาวดิบจับไบโอตินไว้ ควรกินไข่ที่สุกแล้ว เสริมขนาดสูงอาจรบกวนผลตรวจเลือดบางชนิด"},
+ {k:"B5",n:"กรดแพนโทเทนิก",f:"water",c:"#7f4bb5",fn:"ส่วนประกอบของโคเอนไซม์ เอ ใช้ผลิตพลังงานและฮอร์โมน",src:"พบในอาหารแทบทุกชนิด เช่น เนื้อสัตว์ ไข่ เห็ด อะโวคาโด",def:"พบน้อยมาก อาจชาและแสบร้อนปลายเท้า",w:"—"},
+ {k:"B9",img:"1574316071802-0d684efa7bf5",n:"โฟเลต",f:"water",c:"#9145a8",fn:"สร้าง DNA และเม็ดเลือดแดง ป้องกันความผิดปกติของหลอดประสาทในทารกช่วงตั้งครรภ์",src:"ผักใบเขียวเข้ม ถั่วเมล็ดแห้ง ตับ หน่อไม้ฝรั่ง ส้ม",def:"โลหิตจางชนิดเม็ดเลือดแดงตัวโต อ่อนเพลีย ทารกเสี่ยงพิการแต่กำเนิด",w:"หญิงที่วางแผนตั้งครรภ์ควรปรึกษาแพทย์เรื่องการเสริมกรดโฟลิก"},
+ {k:"B12",img:"1499125562588-29fb8a56b5d5",n:"โคบาลามิน",f:"water",c:"#a8418f",fn:"สร้างเม็ดเลือดแดง บำรุงระบบประสาทและสมอง",src:"มีเฉพาะในอาหารจากสัตว์ เช่น เนื้อ ปลา ไข่ นม หอย ตับ",def:"โลหิตจาง ชาปลายมือปลายเท้า ความจำลดลง",w:"กลุ่มเสี่ยงขาด: มังสวิรัติเคร่งครัด ผู้สูงอายุ ผู้ใช้ยาเบาหวาน metformin หรือยาลดกรดนาน ๆ"},
+ {k:"C",img:"1693399991519-bef70bed19a2",n:"วิตามินซี",f:"water",c:"#d8452f",fn:"สร้างคอลลาเจน ช่วยให้แผลหาย ช่วยดูดซึมธาตุเหล็ก ต้านอนุมูลอิสระ",src:"ฝรั่ง มะขามป้อม ส้ม มะละกอ พริกหวาน คะน้า บรอกโคลี",def:"เลือดออกตามไรฟัน (ลักปิดลักเปิด) แผลหายช้า ฟกช้ำง่าย",w:"ถูกทำลายด้วยความร้อน ควรกินผลไม้สด เสริมขนาดสูงมากอาจท้องเสีย และเพิ่มความเสี่ยงนิ่วในผู้ที่เคยเป็น"}
+];
+function renderVit(f){
+  const ORD=["A","D","E","K","B1","B2","B3","B5","B6","B7","B9","B12","C"];
+  $("vitGrid").innerHTML=VIT.slice().sort((a,b)=>ORD.indexOf(a.k)-ORD.indexOf(b.k)).filter(v=>f==="all"||v.f===f).map(v=>'<article class="vit">'+(v.img?'<div class="vpic" style="--vc:'+v.c+';--img:url(\''+PIC(v.img,500)+'\')"></div>':'')+'<header><div class="vbadge" style="--vc:'+v.c+'">'+v.k+'</div><div><h4>'+v.n+'</h4><div class="kind">'+(v.f==="fat"?"ละลายในไขมัน":"ละลายในน้ำ")+'</div></div></header><dl><div><dt>ประโยชน์</dt><dd>'+v.fn+'</dd></div><div><dt>พบใน</dt><dd>'+v.src+'</dd></div><div><dt>ถ้าขาด</dt><dd>'+v.def+'</dd></div></dl>'+(v.w!=="—"?'<div class="warn">'+v.w+'</div>':"")+'</article>').join("");
+}
+chips($("vitChips"),[["all","ทั้งหมด 13"],["fat","ละลายในไขมัน"],["water","ละลายในน้ำ"]],renderVit,"all");
+
+/* foods */
+const HYDRO=[["แตงโม","มีน้ำราว 90% มีวิตามินซีและไลโคปีน","1587049352846-4a222e784d38"],["แตงกวา","มีน้ำราว 95% กินคู่กับน้ำพริกหรือส้มตำ","1589621316382-008455b857cd"],["ส้มโอ / ส้ม","น้ำมาก วิตามินซีสูง","1557800636-894a64c1696f"],["มะละกอสุก","วิตามินเอ ซี และใยอาหาร ช่วยการขับถ่าย","1526318472351-c75fcf070305"],["ผักใบเขียว","น้ำมาก ได้วิตามินเค โฟเลต และใยอาหาร","1574316071802-0d684efa7bf5"],["ผลไม้รวม","สลับกินหลายสี ได้วิตามินหลากหลาย","1490474418585-ba9bad8fd0ea"]];
+$("hydroFoods").innerHTML=HYDRO.map(h=>'<div class="ph"><div class="pic" role="img" aria-label="'+h[0]+'" style="--img:url(\''+PIC(h[2],500)+'\')"></div><div class="tx"><b>'+h[0]+'</b><span>'+h[1]+'</span></div></div>').join("");
+const MENUS=[
+ {m:"breakfast",img:"1766761562530-c8dd12c96d9a",n:"โจ๊กหมูใส่ไข่ ขิงซอย",d:"ย่อยง่าย ได้น้ำจากตัวโจ๊ก โปรตีนจากหมูและไข่",t:["B1","B12","น้ำมาก"],c:"#e3a74a"},
+ {m:"breakfast",img:"1773901344817-537194056c1a",n:"ข้าวต้มปลา + ฝรั่ง 1 ลูก",d:"ไขมันต่ำ ฝรั่งให้วิตามินซีสูง",t:["C","B12","น้ำมาก"],c:"#d98b3a"},
+ {m:"breakfast",img:"1536816579748-4ecb3f03d72a",n:"ข้าวกล้อง ไข่ต้ม ผักลวก",d:"ใยอาหารสูง ไข่ให้วิตามินเอ ดี และบี 12",t:["A","D","B1"],c:"#c9a03a"},
+ {m:"lunch",img:"1623476663364-12de7c8b8b8d",n:"แกงจืดตำลึงหมูสับเต้าหู้",d:"ตำลึงมีวิตามินเอสูง น้ำแกงช่วยเพิ่มน้ำ",t:["A","C","น้ำมาก"],c:"#3f9a5a"},
+ {m:"lunch",img:"1652690528552-297d227827c0",n:"ข้าวกล้องผัดกะเพราไก่ + ไข่ต้ม",d:"ข้าวกล้องให้วิตามินบี ลดน้ำมันและน้ำปลาในการผัด",t:["B1","B3","B6"],c:"#4a8f3c"},
+ {m:"lunch",img:"1455619452474-d2be8b1e70cd",n:"ต้มยำปลา (น้ำใส)",d:"ปลาให้โปรตีน สมุนไพรหลายชนิด ได้น้ำจากน้ำแกง",t:["B12","D","น้ำมาก"],c:"#c4533a"},
+ {m:"dinner",img:"1605909388460-74ec8b204127",n:"แกงเลียงผักรวม",d:"ฟักทอง บวบ ข้าวโพดอ่อน ใบแมงลัก ได้ผักหลายสีในชามเดียว",t:["A","C","น้ำมาก"],c:"#2f8f7a"},
+ {m:"dinner",img:"1760504526044-840cade997b2",n:"ปลานึ่งมะนาว + ผักลวก",d:"ไขมันต่ำ ปลาให้วิตามินดีและบี 12 มะนาวให้วิตามินซี",t:["D","B12","C"],c:"#2a7fa8"},
+ {m:"dinner",img:"1564834724105-918b73d1b9e0",n:"ผัดผักรวมกุ้ง + น้ำพริกผักลวก",d:"ผักใบเขียวให้วิตามินเคและโฟเลต ใช้น้ำมันน้อย",t:["K","B9","E"],c:"#3c8a5f"},
+ {m:"snack",img:"1490474418585-ba9bad8fd0ea",n:"ผลไม้รวม: แตงโม มะละกอ ส้ม",d:"ได้ทั้งน้ำ วิตามินซีและเอ เหมาะช่วงบ่ายที่อากาศร้อน",t:["C","A","น้ำมาก"],c:"#d8453a"},
+ {m:"snack",img:"1550583724-b2692b85b150",n:"นมจืด / นมถั่วเหลืองไม่หวาน",d:"มีวิตามินบี 2 และแคลเซียม บางยี่ห้อเสริมวิตามินดี",t:["B2","D"],c:"#6b7fbf"},
+ {m:"snack",img:"1608797178974-15b35a64ede9",n:"ถั่วอบไม่เค็ม 1 กำมือ",d:"วิตามินอีและไขมันดี กินพอประมาณเพราะพลังงานสูง",t:["E","B3"],c:"#a87a3a"}
+];
+const MEALN={breakfast:"มื้อเช้า",lunch:"มื้อกลางวัน",dinner:"มื้อเย็น",snack:"ของว่าง"};
+chips($("mealChips"),[["all","ทั้งหมด"],["breakfast","เช้า"],["lunch","กลางวัน"],["dinner","เย็น"],["snack","ของว่าง"]],k=>{
+  $("menuGrid").innerHTML=MENUS.filter(x=>k==="all"||x.m===k).map(x=>'<article class="menu"><div class="top" role="img" aria-label="'+x.n+'" style="--mc:linear-gradient(135deg,'+x.c+','+x.c+'aa);--img:url(\''+PIC(x.img,600)+'\')"><span>'+MEALN[x.m]+'</span></div><div class="body"><h4>'+x.n+'</h4><p>'+x.d+'</p><div class="tags">'+x.t.map(t=>'<i>'+(t==="น้ำมาก"?"น้ำมาก":"วิตามิน "+t)+'</i>').join("")+'</div></div></article>').join("")},"all");
+})();
+</script>
+
+</body>
+</html>
